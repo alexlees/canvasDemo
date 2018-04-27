@@ -1,0 +1,70 @@
+@font-face {
+  font-family: 'iconfont';
+  /* project id 576706 */
+  src: url("//at.alicdn.com/t/font_576706_m3byqskx5lpiudi.eot");
+  src: url("//at.alicdn.com/t/font_576706_m3byqskx5lpiudi.eot?#iefix") format("embedded-opentype"), url("//at.alicdn.com/t/font_576706_m3byqskx5lpiudi.woff") format("woff"), url("//at.alicdn.com/t/font_576706_m3byqskx5lpiudi.ttf") format("truetype"), url("//at.alicdn.com/t/font_576706_m3byqskx5lpiudi.svg#iconfont") format("svg");
+}
+.icon {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'iconfont' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.icon-image:before {
+  content: "\E7BC";
+}
+.icon-upload:before {
+  content: "\E6FE";
+}
+.icon-hexagon:before {
+  content: "\E8CB";
+}
+.icon-return:after {
+  content: "\E731";
+}
+.icon-return-2:before {
+  content: "\E7B6";
+}
+.icon-font:before {
+  content: "\E620";
+}
+.icon-drawing:before {
+  content: "\E60E";
+}
+.icon-brightness:before {
+  content: "\E601";
+}
+.icon-contrast:before {
+  content: "\E600";
+}
+.icon-arrow:before {
+  content: "\E692";
+}
+.icon-airplane:before {
+  content: "\E6AE";
+}
+.icon-success:before {
+  content: "\E7AD";
+}
+.icon-angle:before {
+  content: "\E649";
+}
+.icon-round:before {
+  content: "\E657";
+}
+.icon-delete:before {
+  content: "\E602";
+}
+.icon-add:before {
+  content: "\E63C";
+}
+.icon-setting:before {
+  content: "\E608";
+}
