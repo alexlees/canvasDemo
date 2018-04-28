@@ -1,22 +1,5 @@
 <template>
   <div :class="$style.waper">
-    <mt-popup v-model="showPopup" position="right" :class="$style.popup">
-      <mt-field label="文字" placeholder="请添加文字" type="textarea" rows="2" v-model="text"></mt-field>
-      <mt-range
-        v-model="fontSize"
-        :min="10"
-        :max="40"
-        :step="1"
-        value="20">
-        <div slot="start" :class="[$style.icon_center]">字体大小</div>
-      </mt-range>
-      <mt-radio
-        title="字体颜色"
-        v-model="fontColor"
-        :options="colorS">
-      </mt-radio>
-      <mt-button @click="closePopup" type="primary" size="large">确定</mt-button>
-    </mt-popup>
     <div :class="$style.canvas_waper">
       <canvas ref="canvas" width="300px" height="300px" :class="$style.canvas"></canvas>
       <div :class="[$style.upload, $style['icon-upload'], $style.icon]" v-if="!load">
@@ -24,62 +7,94 @@
         <input type="file" name="image" id="" @change="fileData" accept="image/*"  :class="$style.file_input">
       </div>
     </div>
-    <div v-if="!canText">
-      <!-- <x-range :min="0.1" :max="2" :step="0.01" @change="change" :disabled="canDr" tag="缩放" key="1"></x-range> -->
-      <mt-button @click="getText" :disabled="canDr" v-if="!canText" type="primary" size="large">下一步</mt-button>
+    <div v-if="value === 4" :class="$style.fontBox">
+      <div :class="$style.leftBox">
+        <div :class="{[$style.item]: true, [$style.active]: fontColor === '#000000'}">
+          <span :class="[$style.background_000]" @click="changeColor('#000000')">></span>
+        </div>
+        <div :class="{[$style.item]: true, [$style.active]: fontColor === '#cccccc'}">
+          <span :class="[$style.background_ccc]" @click="changeColor('#cccccc')"></span>
+        </div>
+        <div :class="{[$style.item]: true, [$style.active]: fontColor === '#ffffff'}">
+          <span :class="[$style.background_fff]" @click="changeColor('#ffffff')"></span>
+        </div>
+      </div>
+      <div :class="$style.rightBox">
+        <span :class="{[$style.icon]: true, [$style['icon-add']]: noFont, [$style.fontSize]: true, [$style['icon-angle']]: !noFont,}" @click="changeModle"></span>
+      </div>
+      <div :class="$style.tool_box">
+        <mt-range
+        v-model="fontSize"
+        :barHeight="2"
+        :min="10"
+        :max="40"
+        :step="1"
+        value="40">
+          <div slot="start"><i :class="[$style.icon, $style['icon-font'], $style.icon_center]"></i></div>
+        </mt-range>
+      </div>
     </div>
-    <div v-if="canText" :class="$style.range_warper">
-      <!-- <input type="text" @input="setText"/> -->
-      <!-- <x-range @change="changeR" :min="-180" :max="180" :step="1" :initValue="0" tag="旋转" key="2"></x-range>
-      <x-range @change="changeInvert" :min="0" :max="100" :step="1" :initValue="0" tag="反色" key="3"></x-range>
-      <x-range @change="changeBrightness" :min="30" :max="100" :step="1" tag="亮度" :initValue="100" key="4"></x-range>
-      <x-range  @change="changeContrast" :min="0" :max="100" :step="1" :initValue="100" tag="对比度" key="5"></x-range> -->
-      <mt-range
+    <div v-if="!canText">
+      <div :class="$style.tool_box" v-if="value === 0">
+      </div>
+      <div :class="$style.tool_box" v-if="value === 1">
+        <mt-range
+        :barHeight="2"
         v-model="deg"
         :min="-180"
         :max="180"
         :step="1">
-        <div slot="start"><i :class="[$style.icon, $style['icon-angle'], $style.icon_center]"></i></div>
-      </mt-range>
-      <mt-range
-        v-model="brightness"
-        :min="30"
-        :max="200"
-        :step="1"
-        value="100">
-        <div slot="start"><i :class="[$style.icon, $style['icon-brightness'], $style.icon_center]"></i></div>
-      </mt-range>
-      <mt-range
-        v-model="contrast"
-        :min="0"
-        :max="200"
-        :step="1"
-        value="100">
-        <div slot="start"><i :class="[$style.icon, $style['icon-contrast'], $style.icon_center]"></i></div>
-      </mt-range>
-      <div :class="$style.button_warper">
-        <mt-button @click="addText" type="primary">添加文字</mt-button>
-        <mt-button @click="fetchImage" type="primary">上传图片</mt-button>
+          <div slot="start"><i :class="[$style.icon, $style['icon-angle'], $style.icon_center]"></i></div>
+        </mt-range>
+      </div>
+      <div :class="$style.tool_box" v-if="value === 2">
+        <mt-range
+          :barHeight="2"
+          v-model="brightness"
+          :min="30"
+          :max="200"
+          :step="1"
+          value="100">
+          <div slot="start"><i :class="[$style.icon, $style['icon-brightness'], $style.icon_center]"></i></div>
+        </mt-range>
+      </div>
+      <div :class="$style.tool_box" v-if="value === 3">
+        <mt-range
+          :barHeight="2"
+          v-model="contrast"
+          :min="0"
+          :max="200"
+          :step="1"
+          value="100">
+          <div slot="start"><i :class="[$style.icon, $style['icon-contrast'], $style.icon_center]"></i></div>
+        </mt-range>
+      </div>
+      <div :class="$style.padding">
+        <mt-button @click="fetchImage" :disabled="canDr" type="primary" size="large">提交</mt-button>
       </div>
     </div>
-
   </div>
 </template>
 
 <script>
 import Hammer from 'hammerjs'
-import { Button, Range, Popup, Field, Radio } from 'mint-ui'
+import { Button, Range, MessageBox } from 'mint-ui'
 export default {
   components: {
     [Button.name]: Button,
     [Range.name]: Range,
-    [Popup.name]: Popup,
-    [Field.name]: Field,
-    [Radio.name]: Radio
+    [MessageBox.name]: MessageBox
+  },
+  props: {
+    value: {
+      type: Number,
+      default: 0
+    }
   },
   name: 'x-canvas',
   data () {
     return {
+      noFont: true,
       canvas: null,
       ctx: null,
       hammertime: null,
@@ -99,23 +114,10 @@ export default {
       noPan: false,
       deg: 0,
       text: '',
-      fontColor: '#ffffff',
+      fontColor: '#000000',
       deltaY: 0,
       deltaX: 0,
-      fontSize: 20,
-      showPopup: false,
-      colorS: [{
-        label: '红色',
-        value: 'red'
-      },
-      {
-        label: '白色',
-        value: '#ffffff'
-      },
-      {
-        label: '黑色',
-        value: 'black'
-      }]
+      fontSize: 40
     }
   },
   methods: {
@@ -137,15 +139,23 @@ export default {
       // Filter
       this.ctx.filter = `contrast(${this.contrast}%) brightness(${this.brightness}%) invert(${this.invert}%)`
       // 绘制图片
-      this.ctx.drawImage(this.image, this.dx + this.deltaX, this.dy + this.deltaY, this.dWidth, this.dHeight)
+      this.ctx.translate(this.deltaX, this.deltaY)
+      this.ctx.drawImage(this.image, this.dx, this.dy, this.dWidth, this.dHeight)
       this.ctx.restore()
       this.ctx.save()
       this.ctx.textAlign = 'center'
       this.ctx.fillStyle = this.fontColor
-      this.ctx.font = `${this.fontSize}px bold serif`
+      this.ctx.font = `${this.fontSize}px bolder serif`
       this.ctx.fillText(this.text, x, y)
       this.ctx.restore()
       // Scale
+    },
+    drawText (addHitRegion = true) {
+      this.drawImage()
+    },
+    changeColor (value) {
+      this.fontColor = value
+      this.drawText()
     },
     changeBrightness (value) {
       this.brightness = value
@@ -175,8 +185,12 @@ export default {
         this.hammertime.on('panend', this.panEnd)
         this.hammertime.on('pinchin', this.pinchIn)
         this.hammertime.on('pinchout', this.pinchOut)
+        this.canvas.addEventListener('click', this.setText)
       }
       window.requestAnimationFrame(callBack)
+    },
+    setText (e) {
+      console.log(e)
     },
     panEnd (e) {
       if (this.noPan) {
@@ -215,6 +229,7 @@ export default {
       this.dy = this.canvas.height / 2 - this.image.height / 2
       this.ctx.drawImage(this.image, this.dx, this.dy)
       this.load = true
+      this.$emit('loadImage', true)
     },
     imageOnload () {
       this.image.addEventListener('load', (e) => {
@@ -223,21 +238,31 @@ export default {
         this.initCanvasImage()
       }, false)
     },
+    changeModle () {
+      console.log(this.noFont)
+      if (this.noFont) {
+        this.text = '添加文字'
+        this.getText()
+      } else {
+        this.text = ''
+      }
+      this.noFont = !this.noFont
+    },
     panLisener (e) {
       if (this.noPan) {
         return
       }
       if (e.additionalEvent) {
-        console.log(`deltaX`, e.deltaX)
-        console.log(`deltaY`, e.deltaY)
         this.deltaX = e.deltaX
         this.deltaY = e.deltaY
         this.drawImage(false)
       }
     },
     getText () {
-      this.canText = true
-      this.noPan = true
+      MessageBox.prompt('请输入文字', '').then(({ value, action }) => {
+        this.text = value
+      })
+        .catch((err) => console.log(err))
     },
     async fetchImage () {
       const formData = new FormData()
@@ -281,6 +306,25 @@ export default {
     },
     contrast () {
       this.drawImage()
+    },
+    value (value) {
+      if (value === 4) {
+        this.text = '添加文字'
+      }
+      if (value !== 0) {
+        this.noPan = true
+      } else {
+        this.noPan = false
+        this.deg = 0
+        this.text = ''
+        this.initCanvasImage()
+      }
+    },
+    text () {
+      this.drawText()
+    },
+    fontSize () {
+      this.drawText()
     }
   }
 }
@@ -288,6 +332,25 @@ export default {
 
 <style module>
 @import url(./assets/iconfont.css);
+.leftBox{
+  position: absolute;
+  left: 20px;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+}
+.fontBox{
+}
+.waper{
+  margin-top: 20px;
+  padding-top: 10px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
 .canvas{
   display: block;
   border: 1px solid #ccc;
@@ -348,5 +411,56 @@ export default {
   align-items: stretch;
   justify-content: space-around; */
   padding: 10px;
+}
+.background_000{
+  height: 20px;
+  width: 20px;
+  margin: 1px;
+  display: block;
+  border-radius: 100%;
+  background-color: #000000;
+}
+.background_ccc{
+  height: 20px;
+  width: 20px;
+  margin: 1px;
+  display: block;
+  border-radius: 100%;
+  background: #cccccc;
+}
+.background_fff{
+  height: 20px;
+  width: 20px;
+  margin: 1px;
+  display: block;
+  border-radius: 100%;
+  background: #ffffff;
+}
+.item{
+  flex: 1;
+  border: 1px solid #cccccc;
+  border-radius: 100%;
+  margin-right: 5px;
+}
+.rightBox{
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  right: 20px;
+}
+.fontSize{
+  font-size: 30px;
+  color: #666666;
+}
+.active{
+  border-color: #000000;
+}
+.tool_box{
+  padding: 20px 20px 0;
+  box-sizing: content-box;
+  height: 50px;
+}
+.padding{
+  padding: 0 10px;
 }
 </style>

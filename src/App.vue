@@ -1,19 +1,32 @@
 <template>
   <div :class="$style.app">
-    <x-canvas></x-canvas>
+    <x-header @changvalue="changeValue" :canChange="load"></x-header>
+    <x-canvas :value="value" @loadImage="loadImage"></x-canvas>
   </div>
 </template>
 
 <script>
 import xCanvas from './canvas'
-
+import Header from './header'
 export default {
   components: {
-    xCanvas
+    xCanvas,
+    [Header.name]: Header
   },
   name: 'app',
   data () {
     return {
+      value: 0,
+      load: false
+    }
+  },
+  methods: {
+    changeValue (value) {
+      console.log(value)
+      this.value = value
+    },
+    loadImage (value) {
+      this.load = value
     }
   }
 }
@@ -27,7 +40,7 @@ export default {
 }
 </style>
 <style>
-/* *{
+*{
   box-sizing: border-box;
-} */
+}
 </style>
