@@ -94,6 +94,7 @@ export default {
 .active{
   color: #000;
   border: 1px solid #000;
-  border-radius: 100%;
+  border-radius: 50%;
+  box-sizing: content-box;
 }
 </style>

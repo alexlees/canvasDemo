@@ -36,6 +36,15 @@
     </div>
     <div v-if="!canText">
       <div :class="$style.tool_box" v-if="value === 0">
+        <mt-range
+        :disabled="!load"
+        :barHeight="2"
+        v-model="invert"
+        :min="0"
+        :max="100"
+        :step="1">
+          <div slot="start" :class="$style.font_indet">反色</div>
+        </mt-range>
       </div>
       <div :class="$style.tool_box" v-if="value === 1">
         <mt-range
@@ -44,7 +53,7 @@
         :min="-180"
         :max="180"
         :step="1">
-          <div slot="start"><i :class="[$style.icon, $style['icon-angle'], $style.icon_center]"></i></div>
+          <div slot="start" :class="$style.font_indet">旋转</div>
         </mt-range>
       </div>
       <div :class="$style.tool_box" v-if="value === 2">
@@ -55,7 +64,7 @@
           :max="200"
           :step="1"
           value="100">
-          <div slot="start"><i :class="[$style.icon, $style['icon-brightness'], $style.icon_center]"></i></div>
+          <div slot="start" :class="$style.font_indet">亮度</div>
         </mt-range>
       </div>
       <div :class="$style.tool_box" v-if="value === 3">
@@ -66,11 +75,11 @@
           :max="200"
           :step="1"
           value="100">
-          <div slot="start"><i :class="[$style.icon, $style['icon-contrast'], $style.icon_center]"></i></div>
+          <div slot="start" :class="$style.font_indet">对比度</div>
         </mt-range>
       </div>
       <div :class="$style.padding">
-        <mt-button @click="fetchImage" :disabled="canDr" type="primary" size="large">提交</mt-button>
+        <mt-button @click="fetchImage" :disabled="!load" type="primary" size="large">提交</mt-button>
       </div>
     </div>
   </div>
@@ -78,7 +87,7 @@
 
 <script>
 import Hammer from 'hammerjs'
-import { Button, Range, MessageBox } from 'mint-ui'
+import { Button, Range, MessageBox, Indicator, Toast } from 'mint-ui'
 export default {
   components: {
     [Button.name]: Button,
@@ -185,12 +194,8 @@ export default {
         this.hammertime.on('panend', this.panEnd)
         this.hammertime.on('pinchin', this.pinchIn)
         this.hammertime.on('pinchout', this.pinchOut)
-        this.canvas.addEventListener('click', this.setText)
       }
       window.requestAnimationFrame(callBack)
-    },
-    setText (e) {
-      console.log(e)
     },
     panEnd (e) {
       if (this.noPan) {
@@ -203,7 +208,7 @@ export default {
       if (this.noPan) {
         return
       }
-      if (this.scale <= 0.3) {
+      if (this.scale <= 0.1) {
         return
       }
       this.scale -= 0.03
@@ -241,7 +246,6 @@ export default {
     changeModle () {
       console.log(this.noFont)
       if (this.noFont) {
-        this.text = '添加文字'
         this.getText()
       } else {
         this.text = ''
@@ -260,21 +264,45 @@ export default {
     },
     getText () {
       MessageBox.prompt('请输入文字', '').then(({ value, action }) => {
-        this.text = value
+        if (value) {
+          this.text = value
+        }
       })
         .catch((err) => console.log(err))
     },
     async fetchImage () {
       const formData = new FormData()
       this.canvas.toBlob(async (blob) => {
-        formData.append('image', blob, `$image-${Date.now()}.png`)
-        console.log(blob)
-        const res = await fetch('http://192.168.1.107:3000/', {
-          method: 'POST',
-          body: formData,
-          mode: 'no-cors'
-        })
-        console.log(res)
+        const cpuInfo = window.location.search.slice(9) || ''
+        formData.append('cpuinfo', cpuInfo)
+        formData.append('file', blob, `$image-${Date.now()}.png`)
+        try {
+          Indicator.open({text: '正在上传', spinnerType: 'double-bounce'})
+          const url = window.location.hostname === 'localhost' ? 'http://127.0.0.1:3000/' : 'http://www.cinoart.com/Printer/UpdateImg'
+          const res = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            mode: 'no-cors',
+            credentials: 'include'
+          })
+          console.log(res)
+          setTimeout(() => {
+            Indicator.close()
+          }, 500)
+          if (res.status) {
+            setTimeout(() => {
+              Toast('上传成功！')
+            }, 500)
+          } else {
+            setTimeout(() => {
+              Toast('上传失败！')
+            }, 500)
+          }
+        } catch (error) {
+          console.log(error)
+          Indicator.close()
+          Toast('上传失败！')
+        }
       })
     },
     addText (e) {
@@ -308,27 +336,35 @@ export default {
       this.drawImage()
     },
     value (value) {
-      if (value === 4) {
-        this.text = '添加文字'
-      }
       if (value !== 0) {
         this.noPan = true
       } else {
         this.noPan = false
         this.deg = 0
         this.text = ''
+        this.invert = 0
+        this.brightness = 100
+        this.contrast = 100
         this.initCanvasImage()
       }
     },
-    text () {
-      this.drawText()
+    text (value) {
+      this.drawImage()
     },
     fontSize () {
-      this.drawText()
+      if (this.text) {
+        this.drawText()
+      }
+    },
+    invert () {
+      this.drawImage()
     }
   }
 }
 </script>
+<style>
+@import url(./assets/iconfont.css);
+</style>
 
 <style module>
 @import url(./assets/iconfont.css);
@@ -349,7 +385,6 @@ export default {
   padding-top: 10px;
   box-sizing: border-box;
   position: relative;
-  z-index: 1;
 }
 .canvas{
   display: block;
@@ -453,7 +488,7 @@ export default {
   color: #666666;
 }
 .active{
-  border-color: #000000;
+  border: 2px solid #26a2ff;
 }
 .tool_box{
   padding: 20px 20px 0;
@@ -462,5 +497,9 @@ export default {
 }
 .padding{
   padding: 0 10px;
+}
+.font_indet{
+  margin: 0 10px 0 0;
+  font-size: 12px;
 }
 </style>
