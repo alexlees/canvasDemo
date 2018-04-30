@@ -266,6 +266,8 @@ export default {
       MessageBox.prompt('请输入文字', '').then(({ value, action }) => {
         if (value) {
           this.text = value
+        } else {
+          this.noFont = !this.noFont
         }
       })
         .catch((err) => console.log(err))
@@ -295,18 +297,15 @@ export default {
           credentials: 'include',
           body: formData
         })
+        console.log(res)
         setTimeout(() => {
           Indicator.close()
         }, 500)
-        if (res.body.status === 1) {
-          setTimeout(() => {
-            Toast('上传成功！')
-          }, 500)
-        } else {
-          setTimeout(() => {
-            Toast('上传失败！')
-          }, 500)
-        }
+        const jsonRes = await res.json()
+        console.log(jsonRes)
+        setTimeout(() => {
+          Toast(jsonRes.result)
+        }, 500)
       } catch (error) {
         console.log(error)
         Indicator.close()
