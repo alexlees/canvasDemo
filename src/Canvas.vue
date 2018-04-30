@@ -276,7 +276,7 @@ export default {
       const cpuInfo = window.location.search.slice(9) || '277eb3b1e31aa900f406c039a9679902'
       const base64 = this.canvas.toDataURL()
       const data = {
-        cpuInfo,
+        'cpuInfo': cpuInfo,
         file: base64
       }
       for (let key in data) {
