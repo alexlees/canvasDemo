@@ -271,39 +271,47 @@ export default {
         .catch((err) => console.log(err))
     },
     async fetchImage () {
-      const formData = new FormData()
-      this.canvas.toBlob(async (blob) => {
-        const cpuInfo = window.location.search.slice(9) || ''
-        formData.append('cpuinfo', cpuInfo)
-        formData.append('file', blob, `$image-${Date.now()}.png`)
-        try {
-          Indicator.open({text: '正在上传', spinnerType: 'double-bounce'})
-          const url = window.location.hostname === 'localhost' ? 'http://127.0.0.1:3000/' : 'http://www.cinoart.com/Printer/UpdateImg'
-          const res = await fetch(url, {
-            method: 'POST',
-            body: formData,
-            mode: 'no-cors',
-            credentials: 'include'
-          })
-          console.log(res)
-          setTimeout(() => {
-            Indicator.close()
-          }, 500)
-          if (res.status) {
-            setTimeout(() => {
-              Toast('上传成功！')
-            }, 500)
-          } else {
-            setTimeout(() => {
-              Toast('上传失败！')
-            }, 500)
-          }
-        } catch (error) {
-          console.log(error)
+      const url = 'http://www.cinoart.com/Printer/UpdateImg'
+      const formBody = []
+      const cpuInfo = window.location.search.slice(9) || '277eb3b1e31aa900f406c039a9679902'
+      const base64 = this.canvas.toDataURL()
+      const data = {
+        cpuInfo,
+        file: base64
+      }
+      for (let key in data) {
+        const encodedKey = encodeURIComponent(key)
+        const encodedValue = encodeURIComponent(data[key])
+        formBody.push(`${encodedKey}=${encodedValue}`)
+      }
+      const formData = formBody.join('&')
+      try {
+        Indicator.open({text: '正在上传', spinnerType: 'double-bounce'})
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+          },
+          credentials: 'include',
+          body: formData
+        })
+        setTimeout(() => {
           Indicator.close()
-          Toast('上传失败！')
+        }, 500)
+        if (res.body.status === 1) {
+          setTimeout(() => {
+            Toast('上传成功！')
+          }, 500)
+        } else {
+          setTimeout(() => {
+            Toast('上传失败！')
+          }, 500)
         }
-      })
+      } catch (error) {
+        console.log(error)
+        Indicator.close()
+        Toast('上传失败！')
+      }
     },
     addText (e) {
       this.showPopup = true
