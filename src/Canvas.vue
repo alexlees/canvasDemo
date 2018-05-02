@@ -141,6 +141,8 @@ export default {
       // Rotate
       this.ctx.save()
       this.ctx.clearRect(0, 0, x * 2, y * 2) // 先清掉画布上的内容
+      this.ctx.fillStyle = '#ffffff'
+      this.ctx.fillRect(0, 0, x * 2, y * 2) // 白色填充
       this.ctx.translate(x, y) // 将绘图原点移到画布中点
       this.ctx.rotate((Math.PI / 180) * deg) // 旋转角度
       this.ctx.scale(scale, scale)
@@ -225,6 +227,8 @@ export default {
       this.drawImage()
     },
     canvasClip () {
+      this.ctx.fillStyle = '#ffffff'
+      this.ctx.strokeStyle = '#ffffff'
       this.ctx.beginPath()
       this.ctx.arc(this.canvas.width / 2, this.canvas.height / 2, this.canvas.width / 2, 0, Math.PI * 2, true)
       this.ctx.clip()
@@ -275,7 +279,7 @@ export default {
     async fetchImage () {
       const url = 'http://www.cinoart.com/Printer/UpdateImg'
       const formBody = []
-      const cpuInfo = window.location.search.slice(9) || '277eb3b1e31aa900f406c039a9679902'
+      const cpuInfo = window.location.search.slice(9) || ''
       const base64 = this.canvas.toDataURL()
       const data = {
         'cpuInfo': cpuInfo,
@@ -311,6 +315,19 @@ export default {
         Indicator.close()
         Toast('上传失败！')
       }
+    },
+    async uploadTest () {
+      const url = 'http://192.168.1.107:3000/'
+      const formData = new FormData()
+      this.canvas.toBlob(async (blob) => {
+        formData.append('image', blob, `${Date.now()}.png`)
+        let res = await fetch(url, {
+          method: 'POST',
+          body: formData,
+          mode: 'no-cors'
+        })
+        console.log(res)
+      })
     },
     addText (e) {
       this.showPopup = true
