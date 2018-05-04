@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import App from './App'
 import './assets/reset.css'
+import 'whatwg-fetch'
 
 Vue.config.productionTip = false
 
