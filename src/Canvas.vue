@@ -10,7 +10,7 @@
     <div v-if="value === 4" :class="$style.fontBox">
       <div :class="$style.leftBox">
         <div :class="{[$style.item]: true, [$style.active]: fontColor === '#000000'}">
-          <span :class="[$style.background_000]" @click="changeColor('#000000')">></span>
+          <span :class="[$style.background_000]" @click="changeColor('#000000')"></span>
         </div>
         <div :class="{[$style.item]: true, [$style.active]: fontColor === '#cccccc'}">
           <span :class="[$style.background_ccc]" @click="changeColor('#cccccc')"></span>
@@ -22,37 +22,38 @@
       <div :class="$style.rightBox">
         <span :class="{[$style.icon]: true, [$style['icon-add']]: noFont, [$style.fontSize]: true, [$style['icon-angle']]: !noFont,}" @click="changeModle"></span>
       </div>
-      <div :class="$style.tool_box">
+      <div :class="[$style.tool_box, $style.pdb_10]">
         <mt-range
-        v-model="fontSize"
-        :barHeight="2"
-        :min="10"
-        :max="40"
-        :step="1"
-        value="40">
+          v-model="fontSize"
+          :barHeight="2"
+          :min="10"
+          :max="40"
+          :step="1"
+          value="40">
           <div slot="start"><i :class="[$style.icon, $style['icon-font'], $style.icon_center]"></i></div>
         </mt-range>
+        <mt-button @click="showAction = true" :class="$style.btn">{{fontFamily | font}}</mt-button>
       </div>
     </div>
     <div v-if="!canText">
       <div :class="$style.tool_box" v-if="value === 0">
         <mt-range
-        :disabled="!load"
-        :barHeight="2"
-        v-model="invert"
-        :min="0"
-        :max="100"
-        :step="1">
+          :disabled="!load"
+          :barHeight="2"
+          v-model="invert"
+          :min="0"
+          :max="100"
+          :step="1">
           <div slot="start" :class="$style.font_indet">反色</div>
         </mt-range>
       </div>
       <div :class="$style.tool_box" v-if="value === 1">
         <mt-range
-        :barHeight="2"
-        v-model="deg"
-        :min="-180"
-        :max="180"
-        :step="1">
+          :barHeight="2"
+          v-model="deg"
+          :min="-180"
+          :max="180"
+          :step="1">
           <div slot="start" :class="$style.font_indet">旋转</div>
         </mt-range>
       </div>
@@ -82,17 +83,26 @@
         <mt-button @click="fetchImage" :disabled="!load" type="primary" size="large">提交</mt-button>
       </div>
     </div>
+    <mt-actionsheet
+      :actions="actions"
+      v-model="showAction">
+    </mt-actionsheet>
   </div>
 </template>
 
 <script>
 import Hammer from 'hammerjs'
-import { Button, Range, MessageBox, Indicator, Toast } from 'mint-ui'
+import { Button, Range, MessageBox, Indicator, Toast, Actionsheet } from 'mint-ui'
+const fontFamily = {
+  '微软雅黑': 'Microsoft Yahei',
+  '楷体': 'KaiTi'
+}
 export default {
   components: {
     [Button.name]: Button,
     [Range.name]: Range,
-    [MessageBox.name]: MessageBox
+    [MessageBox.name]: MessageBox,
+    [Actionsheet.name]: Actionsheet
   },
   props: {
     value: {
@@ -126,10 +136,36 @@ export default {
       fontColor: '#000000',
       deltaY: 0,
       deltaX: 0,
-      fontSize: 40
+      fontSize: 40,
+      fontFamily: 'Microsoft Yahei',
+      showAction: false,
+      actions: [
+        {
+          name: '微软雅黑',
+          method: this.setFontFamily
+        },
+        {
+          name: '楷体',
+          method: this.setFontFamily
+        }
+      ]
     }
   },
   methods: {
+    setFontFamily (val) {
+      this.fontFamily = fontFamily[val.name]
+      this.drawImage()
+    },
+    beforeUpload () {
+      const image = document.createElement('canvas')
+      image.height = 300
+      image.width = 300
+      const ctx = image.getContext('2d')
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, image.width, image.height)
+      ctx.drawImage(this.canvas, 0, 0)
+      return image
+    },
     drawImage (noDelta = true) {
       const scale = this.scale
       const deg = this.deg
@@ -156,7 +192,8 @@ export default {
       this.ctx.save()
       this.ctx.textAlign = 'center'
       this.ctx.fillStyle = this.fontColor
-      this.ctx.font = `${this.fontSize}px bolder serif`
+      console.log(this.fontFamily)
+      this.ctx.font = `${this.fontSize}px ${this.fontFamily}`
       this.ctx.fillText(this.text, x, y)
       this.ctx.restore()
       // Scale
@@ -280,7 +317,7 @@ export default {
       const url = 'http://www.cinoart.com/Printer/UpdateImg'
       const formBody = []
       const cpuInfo = window.location.search.slice(9) || ''
-      const base64 = this.canvas.toDataURL()
+      const base64 = this.beforeUpload().toDataURL()
       const data = {
         'cpuInfo': cpuInfo,
         file: base64
@@ -319,7 +356,8 @@ export default {
     async uploadTest () {
       const url = 'http://192.168.1.107:3000/'
       const formData = new FormData()
-      this.canvas.toBlob(async (blob) => {
+      const image = this.beforeUpload()
+      image.toBlob(async (blob) => {
         formData.append('image', blob, `${Date.now()}.png`)
         let res = await fetch(url, {
           method: 'POST',
@@ -335,6 +373,15 @@ export default {
     closePopup () {
       this.showPopup = false
       this.drawImage()
+    }
+  },
+  filters: {
+    font (value) {
+      for (let key in fontFamily) {
+        if (fontFamily[key] === value) {
+          return key
+        }
+      }
     }
   },
   created () {
@@ -392,6 +439,9 @@ export default {
 
 <style module>
 @import url(./assets/iconfont.css);
+.btn{
+  margin: 10px 0;
+}
 .leftBox{
   position: absolute;
   left: 20px;
@@ -471,6 +521,9 @@ export default {
   justify-content: space-around; */
   padding: 10px;
 }
+.pdb_10{
+  padding: 20px 20px 10px;
+}
 .background_000{
   height: 20px;
   width: 20px;
@@ -517,7 +570,7 @@ export default {
 .tool_box{
   padding: 20px 20px 0;
   box-sizing: content-box;
-  height: 50px;
+  min-height: 50px;
 }
 .padding{
   padding: 0 10px;
