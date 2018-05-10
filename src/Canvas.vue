@@ -32,7 +32,6 @@
           value="40">
           <div slot="start"><i :class="[$style.icon, $style['icon-font'], $style.icon_center]"></i></div>
         </mt-range>
-        <mt-button @click="showAction = true" :class="$style.btn">{{fontFamily | font}}</mt-button>
       </div>
     </div>
     <div v-if="!canText">
@@ -83,26 +82,18 @@
         <mt-button @click="fetchImage" :disabled="!load" type="primary" size="large">提交</mt-button>
       </div>
     </div>
-    <mt-actionsheet
-      :actions="actions"
-      v-model="showAction">
-    </mt-actionsheet>
   </div>
 </template>
 
 <script>
 import Hammer from 'hammerjs'
-import { Button, Range, MessageBox, Indicator, Toast, Actionsheet } from 'mint-ui'
-const fontFamily = {
-  '微软雅黑': 'Microsoft Yahei',
-  '楷体': 'KaiTi'
-}
+import { Button, Range, MessageBox, Indicator, Toast } from 'mint-ui'
+
 export default {
   components: {
     [Button.name]: Button,
     [Range.name]: Range,
-    [MessageBox.name]: MessageBox,
-    [Actionsheet.name]: Actionsheet
+    [MessageBox.name]: MessageBox
   },
   props: {
     value: {
@@ -137,25 +128,11 @@ export default {
       deltaY: 0,
       deltaX: 0,
       fontSize: 40,
-      fontFamily: 'Microsoft Yahei',
-      showAction: false,
-      actions: [
-        {
-          name: '微软雅黑',
-          method: this.setFontFamily
-        },
-        {
-          name: '楷体',
-          method: this.setFontFamily
-        }
-      ]
+      fontFamily: `sans-serif`,
+      showAction: false
     }
   },
   methods: {
-    setFontFamily (val) {
-      this.fontFamily = fontFamily[val.name]
-      this.drawImage()
-    },
     beforeUpload () {
       const image = document.createElement('canvas')
       image.height = 300
@@ -193,7 +170,7 @@ export default {
       this.ctx.textAlign = 'center'
       this.ctx.fillStyle = this.fontColor
       console.log(this.fontFamily)
-      this.ctx.font = `${this.fontSize}px ${this.fontFamily}`
+      this.ctx.font = `${this.fontSize}px bloder ${this.fontFamily}`
       this.ctx.fillText(this.text, x, y)
       this.ctx.restore()
       // Scale
@@ -247,20 +224,20 @@ export default {
       if (this.noPan) {
         return
       }
+      this.scale -= 0.02
       if (this.scale <= 0.1) {
-        return
+        this.scale = 0.1
       }
-      this.scale -= 0.03
       this.drawImage()
     },
     pinchOut (e) {
       if (this.noPan) {
         return
       }
-      if (this.scale >= 2.5) {
-        return
+      this.scale += 0.02
+      if (this.scale >= 3) {
+        this.scale = 3
       }
-      this.scale += 0.03
       this.drawImage()
     },
     canvasClip () {
@@ -273,12 +250,15 @@ export default {
     initCanvasImage () {
       this.dx = this.canvas.width / 2 - this.image.width / 2
       this.dy = this.canvas.height / 2 - this.image.height / 2
-      this.ctx.drawImage(this.image, this.dx, this.dy)
+      this.ctx.drawImage(this.image, this.dx, this.dy, this.dWidth, this.dHeight)
       this.load = true
       this.$emit('loadImage', true)
     },
     imageOnload () {
       this.image.addEventListener('load', (e) => {
+        const ratio = this.image.width / this.image.height // 宽高比
+        this.image.width = this.canvas.width
+        this.image.height = this.image.width / ratio
         this.dWidth = this.width = this.image.width
         this.dHeight = this.height = this.image.height
         this.initCanvasImage()
@@ -373,15 +353,6 @@ export default {
     closePopup () {
       this.showPopup = false
       this.drawImage()
-    }
-  },
-  filters: {
-    font (value) {
-      for (let key in fontFamily) {
-        if (fontFamily[key] === value) {
-          return key
-        }
-      }
     }
   },
   created () {
